@@ -1,0 +1,29 @@
+# Vivado / Xilinx generated directories & transient files
+.Xil/
+*.cache/
+*.hw/
+*.ip_user_files/
+*.runs/
+*.sim/
+*.gen/
+
+# Vivado log and journal files
+*.log
+*.jou
+*.pb
+*.str
+
+# Synthesis & Implementation artifacts
+*.bit
+*.bin
+*.dcp
+*.sysdef
+*.hdf
+*.xsa
+
+# Local build directory created by TCL script
+/build/
+
+# Temporary / OS files
+.DS_Store
+Thumbs.db

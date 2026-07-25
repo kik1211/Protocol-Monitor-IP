@@ -1,72 +1,80 @@
 # Contributing to Protocol Monitor IP
 
-Thank you for your interest in contributing to the **Protocol Monitor IP** open-source project! We welcome contributions from FPGA engineers, verification specialists, RTL architects, and technical writers.
+Thank you for your interest in contributing. This project welcomes contributions from FPGA engineers, verification engineers, and technical writers.
 
 ---
 
-## 1. Development & Git Workflow
+## 1. Development Workflow
 
-1. **Fork the Repository**: Create your personal fork of the repository on GitHub.
-2. **Clone your Fork**:
+1. **Fork** this repository on GitHub.
+2. **Clone** your fork:
    ```bash
-   git clone https://github.com/your-username/Protocol-Monitor-IP.git
+   git clone https://github.com/<your-username>/Protocol-Monitor-IP.git
    cd Protocol-Monitor-IP
    ```
-3. **Create a Feature Branch**:
+3. **Create a feature branch**:
    ```bash
    git checkout -b feature/your-feature-name
    ```
-4. **Make & Test your Changes**: Ensure all simulations pass locally in Vivado or open-source Verilog tools (Icarus Verilog).
-5. **Commit your Changes**: Follow the Commit Message Guidelines outlined below.
-6. **Push & Open a Pull Request**: Push your branch to GitHub and submit a PR against the `main` branch.
+4. **Make and test your changes.** Verify that the self-checking testbench passes in Vivado or Icarus Verilog before submitting.
+5. **Commit** using the guidelines below.
+6. **Push and open a Pull Request** against the `main` branch.
 
 ---
 
-## 2. RTL Coding Style & Guidelines
+## 2. Coding Style
 
-When contributing Verilog/SystemVerilog RTL or testbench code:
+### Verilog RTL
 
-- **Language Standard**: IEEE 1364-2001 Verilog for synthesizable RTL modules.
-- **Naming Conventions**:
-  - Module names: `lowercase_with_underscores` (e.g. `protocol_monitor`).
-  - Signal names: `lowercase_with_underscores` (e.g. `violation_code`, `total_handshakes`).
-  - Active-low signals: Must end with `_n` (e.g. `rst_n`).
-  - Parameters: `UPPERCASE_WITH_UNDERSCORES` (e.g. `DATA_WIDTH`, `TIMEOUT_LIMIT`).
-- **File Headers**: Every new `.v`, `.sv`, or `.xdc` file must begin with a standard header comment block stating file name, project name, author, and description.
-- **Procedural Assignments**: Always use non-blocking assignments (`<=`) for sequential logic inside `always @(posedge clk)` blocks.
+- **Standard**: IEEE 1364-2001 Verilog for all synthesizable modules.
+- **Module names**: `lowercase_with_underscores` (e.g. `protocol_monitor`).
+- **Signal names**: `lowercase_with_underscores` (e.g. `violation_code`, `total_handshakes`).
+- **Active-low signals**: Suffix with `_n` (e.g. `rst_n`).
+- **Parameters**: `UPPERCASE_WITH_UNDERSCORES` (e.g. `DATA_WIDTH`, `TIMEOUT_LIMIT`).
+- **Sequential logic**: Use non-blocking assignments (`<=`) inside `always @(posedge clk)` blocks.
+- **File headers**: Every `.v` or `.xdc` file must include a header comment block with file name, project name, and description.
+
+### Documentation
+
+- Use relative links in Markdown files (e.g. `[architecture.md](docs/architecture.md)`), not absolute `file:///` paths.
+- Signal names in prose should use backtick formatting (e.g. `violation_code`).
 
 ---
 
 ## 3. Pull Request Process
 
-1. Ensure your code does not break existing functional test scenarios in `tb/tb.v`.
-2. Update relevant documentation in `docs/` or `README.md` if adding or modifying ports, parameters, or features.
-3. Reference any related GitHub issue numbers in your PR description (e.g. `Fixes #12`).
-4. Maintain clean commit history. Squashing minor fixup commits before submitting a PR is encouraged.
+1. Ensure the self-checking testbench (`tb/tb.v`) reports `0 ERRORS`.
+2. Update relevant documentation in `docs/` or `README.md` if you add or modify ports, parameters, or features.
+3. Reference related issue numbers in your PR description (e.g. `Fixes #12`).
+4. Squash minor fixup commits before submitting.
 
 ---
 
 ## 4. Commit Message Guidelines
 
-We follow Conventional Commits formatting:
+This project follows [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
 <type>(<scope>): <short summary>
 
-[optional body description]
+[optional body]
 ```
 
-### Types:
-- `feat`: A new RTL module, parameter, or functionality.
-- `fix`: A bug fix in RTL, testbench, constraints, or scripts.
-- `docs`: Documentation updates (README, docs/*.md).
-- `test`: Adding or modifying verification testbenches.
-- `refactor`: RTL or script organization changes that do not alter functionality.
+### Types
 
-### Example:
+| Type | Use For |
+| :--- | :--- |
+| `feat` | New RTL modules, parameters, or functionality |
+| `fix` | Bug fixes in RTL, testbench, constraints, or scripts |
+| `docs` | Documentation changes |
+| `test` | Testbench additions or modifications |
+| `refactor` | Code organization changes with no functional impact |
+
+### Example
+
 ```
-feat(monitor): add clear_error input port to deassert sticky flag
+feat(monitor): add clear_error input port
 
-Adds an active-high clear_error input port allowing host software to deassert
-protocol_violation_sticky without performing a full chip reset. Updated tb.v.
+Adds an active-high clear_error input allowing the host to deassert
+protocol_violation_sticky without a full chip reset.
 ```

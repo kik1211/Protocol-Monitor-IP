@@ -1,103 +1,134 @@
 # Verification & Simulation Methodology
 
 ## 1. Testbench Overview
-The testbench ([tb/tb.v](file:///a:/hackfest/sandisk/protocol_monitor7/protocol_monitor6/Protocol-Monitor-IP/tb/tb.v)) provides a self-checking verification environment for `top` and `protocol_monitor`. It drives clock, reset, and switch control lines to simulate both normal operations and error scenarios.
+
+The testbench ([tb/tb.v](../tb/tb.v)) provides a self-checking verification environment for the `top` module and its internal `protocol_monitor` instance. It drives clock, reset, and switch control signals to exercise normal handshake operations and all four violation scenarios.
+
+### Key Testbench Features
+
+- **Self-Checking Assertions**: `check_condition(expression, test_name)` task prints `[PASS]` or `[FAIL]` and tracks failures.
+- **Error Counter**: Integer `error_count` accumulates failed checks. Zero at `$finish` means all tests passed.
+- **Timeout Override**: `defparam uut.u_checker.TIMEOUT_LIMIT = 10` reduces the timeout limit from 100 million to 10 cycles for fast simulation.
+- **Hierarchical Signal Access**: Internal signals are accessed via `uut.protocol_violation_sticky`, `uut.violation_code`, etc.
 
 ---
 
 ## 2. Simulation Timeline
 
-The following timeline details the sequential execution of verification test scenarios in `tb.v` alongside observed hardware responses:
-
-| Time (approx.) | Test Scenario | Stimulus Driven | Expected Observation |
+| Time (approx.) | Scenario | Stimulus | Expected Observation |
 | :---: | :--- | :--- | :--- |
-| **50–140 ns** | Clean Handshake | `sw[1]=1` (`vld`), `sw[2]=1` (`rdy`) for 5 cycles | `total_handshakes` increments to 5; `total_violations = 0`; `violation_code = 0`. |
-| **175–190 ns** | Drop VALID | `sw[1]=1`, `sw[2]=0`, wait 2 cycles, `sw[1]=0` | `violation_code = 1` (`VIOL_DROP_VALID`); `drop_valid_count` increments; `protocol_violation_sticky` latches to `1`. |
-| **220–240 ns** | Data Change | `sw[1]=1`, `sw[2]=0`, `sw[7:3]=2`, wait 2 cycles, `sw[7:3]=5` | `violation_code = 2` (`VIOL_DATA_CHG`); `data_change_count` increments. |
-| **350–370 ns** | Timeout | `sw[1]=1`, `sw[2]=0`, wait 11 cycles (`TIMEOUT_LIMIT=10`) | `violation_code = 3` (`VIOL_TIMEOUT`); `timeout_count` increments. |
-| **445–460 ns** | Reset Grace Violation | Assert reset (`sw[0]=0`), release reset while `sw[1]=1` | Reset clears all previous counters; `violation_code = 4` (`VIOL_RESET_VALID`); `reset_violation_count = 1`. |
+| 50–140 ns | Scenario 0: Clean Handshake | `sw[1]=1`, `sw[2]=1` for 5 cycles | `total_handshakes` = 5; `total_violations` = 0; `violation_code` = 0. |
+| 175–190 ns | Scenario 1: Drop Valid | `sw[1]=1`, `sw[2]=0`, wait 2 cycles, then `sw[1]=0` | `violation_code` = 1 (`VIOL_DROP_VALID`); `drop_valid_count` increments; `protocol_violation_sticky` latches to 1. |
+| 220–240 ns | Scenario 2: Data Change | `sw[1]=1`, `sw[2]=0`, `sw[7:3]=2`, wait 2 cycles, then `sw[7:3]=5` | `violation_code` = 2 (`VIOL_DATA_CHG`); `data_change_count` increments. |
+| 350–370 ns | Scenario 3: Timeout | `sw[1]=1`, `sw[2]=0`, wait 11 cycles (exceeds `TIMEOUT_LIMIT=10`) | `violation_code` = 3 (`VIOL_TIMEOUT`); `timeout_count` increments. |
+| 445–460 ns | Scenario 4: Reset Grace | Assert reset (`sw[0]=0`), release while `sw[1]=1` | Reset clears all counters; `violation_code` = 4 (`VIOL_RESET_VALID`); `reset_violation_count` = 1. |
 
 ---
 
-## 3. Verification & Signal Behavior Notes
+## 3. Signal Behavior Notes
 
-### `protocol_violation_sticky` Behavior
-- The sticky violation signal (`protocol_violation_sticky`) initializes to `0` upon reset release.
-- When any protocol violation occurs (Scenario 1 at ~175 ns), `protocol_violation_sticky` latches to `1` and remains `1` across subsequent clock cycles.
-- It can **only** be deasserted by asserting active-low system reset (`sw[0] = 0`), as observed at 445 ns.
+### `protocol_violation_sticky`
 
-### `violation_code` Transitions
-- `violation_code` operates in **live mode**. It defaults to `4'd0` (`VIOL_NONE`) on every clock cycle unless an active violation occurs on that exact clock edge.
-- When an error is detected, `violation_code` pulses to the corresponding non-zero code (`1` for Drop Valid, `2` for Data Change, `3` for Timeout, `4` for Reset Grace) for the cycle duration of the violation event.
+- Initializes to `0` upon reset release.
+- Latches to `1` on the first protocol violation (Scenario 1 at ~175 ns).
+- Remains `1` across all subsequent cycles regardless of `violation_code` returning to `0`.
+- Can only be cleared by asserting active-low reset (`sw[0] = 0`).
 
-### Counter Accumulation & Reset Effect
-- Counters (`total_handshakes`, `drop_valid_count`, `data_change_count`, `timeout_count`, `total_violations`) accumulate sequentially during Scenarios 0 through 3.
-- In Scenario 4 (445 ns), system reset (`sw[0] = 0`) is asserted. As defined in [protocol_monitor.v](file:///a:/hackfest/sandisk/protocol_monitor7/protocol_monitor6/Protocol-Monitor-IP/rtl/protocol_monitor.v#L58-L88), active-low reset clears all registers and counters to 0.
-- Following reset release while `vld == 1`, Scenario 4 records a single Reset Grace violation (`reset_violation_count = 1`, `total_violations = 1`), which is reflected in the final simulation log output at `$finish`.
+### `violation_code`
+
+- Operates in **live mode**: defaults to `4'd0` (`VIOL_NONE`) every cycle.
+- Pulses to the corresponding code (`1`, `2`, `3`, or `4`) only during the exact clock edge when a violation is detected.
+- Returns to `0` on the next cycle after the violation event.
+
+### Counter Accumulation and Reset Behavior
+
+- All counters (`total_handshakes`, `total_violations`, `drop_valid_count`, `data_change_count`, `timeout_count`, `reset_violation_count`) accumulate across Scenarios 0 through 3.
+- In Scenario 4, active-low reset (`sw[0] = 0`) clears every register to zero, as defined in the reset branch of [protocol_monitor.v](../rtl/protocol_monitor.v) (lines 67–96).
+- After reset release, the Reset Grace violation is detected because `vld` (`sw[1]`) is still high. This records `reset_violation_count = 1` and `total_violations = 1`.
+- The final simulation log therefore shows post-reset values only: `total_handshakes = 0`, `drop_valid_count = 0`, etc. This is correct behavior.
 
 ---
 
 ## 4. Throughput Calculation Note
 
-* **Observed Behavior**: `throughput_pct` remains `0%` throughout the simulation.
-* **Explanation**: `throughput_pct` calculates integer percentage throughput over a sliding window of `WINDOW_SIZE` cycles (`WINDOW_SIZE = 1000` cycles = 10,000 ns). The default simulation duration is ~500 ns (50 cycles), and only 5 handshakes occur:
-  $$\text{throughput\_pct} = \frac{5 \times 100}{1000} = \frac{500}{1000} = 0.5\% \xrightarrow{\text{integer truncation}} 0\%$$
-* **Conclusion**: This is expected mathematical behavior for integer division in Verilog and is **NOT** a hardware bug.
+`throughput_pct` remains `0` throughout the entire simulation. This is expected and is **not** a bug.
+
+**Explanation:** The throughput formula is:
+
+```
+throughput_pct = (window_handshakes × 100) / WINDOW_SIZE
+```
+
+With `WINDOW_SIZE = 1000` and only 5 handshakes completing in ~50 cycles:
+
+```
+(5 × 100) / 1000 = 500 / 1000 = 0  (integer truncation from 0.5)
+```
+
+Verilog integer division truncates toward zero. The throughput percentage would become nonzero only if more than 10 handshakes completed within a 1000-cycle window.
 
 ---
 
-## 5. Testbench Error Tracking (`error_count`)
+## 5. Error Tracking (`error_count`)
 
-* **Definition**: `error_count` is an integer variable declared inside `tb.v` to track verification assertion failures.
-* **Mechanism**: Every test condition invokes `check_condition(expression, test_name)`. If `expression` evaluates to `0` (false), `check_condition` prints a `[FAIL]` message and increments `error_count = error_count + 1`.
-* **Final Value**: In a successful test run, all 10 checking conditions evaluate to true, resulting in `error_count = 0` and printing `*** ALL VERIFICATION TESTS PASSED (0 ERRORS) ***`.
-
----
-
-## 6. How to Read the Waveforms
-
-When inspecting GTKWave or Vivado Hardware Manager ILA captures:
-
-1. **Identifying a Successful Handshake**:
-   - Locate the `clk` rising edge.
-   - Verify both `vld` (`sw[1]`) and `rdy` (`sw[2]`) are high (`1`).
-   - Observe `led[7]` (`v & r`) pulsing high and `total_handshakes` incrementing.
-
-2. **Identifying a Protocol Violation**:
-   - **Drop VALID**: Observe `vld` dropping from `1` to `0` while `rdy` is `0`. `violation_code` pulses to `1`.
-   - **Data Change**: Observe `data` bus changing value while `vld` is `1` and `rdy` is `0`. `violation_code` pulses to `2`.
-   - **Timeout**: Observe `vld` remaining `1` and `rdy` remaining `0` for >10 cycles. `violation_code` pulses to `3`.
-   - **Reset Grace**: Observe `vld` high immediately after `rst_n` (`sw[0]`) transitions from `0` to `1`. `violation_code` pulses to `4`.
-   - In all violation cases, `protocol_violation_sticky` (`led[4]`) transitions from `0` to `1` and stays latched high.
+- `error_count` is an integer variable in `tb.v` initialized to `0`.
+- Every call to `check_condition(expression, test_name)` evaluates the boolean `expression`. If false, it prints `[FAIL]` and increments `error_count`.
+- The final summary block at `$finish` reports `0 ERRORS` when all 10 checks pass.
 
 ---
 
-## 7. Automated Test Log Matrix
+## 6. Waveform Reading Guide
+
+When inspecting waveforms in GTKWave or Vivado:
+
+### Identifying a Successful Handshake
+
+1. Locate a rising `clk` edge.
+2. Verify both `vld` (driven by `sw[1]`) and `rdy` (driven by `sw[2]`) are high.
+3. `led[7]` (`vld & rdy`) pulses high.
+4. `total_handshakes` increments by 1.
+
+### Identifying Protocol Violations
+
+| Violation | What to Look For | `violation_code` |
+| :--- | :--- | :---: |
+| Drop Valid | `vld` drops from 1 to 0 while `rdy` is 0 and `transaction_active` is 1. | `1` |
+| Data Change | `data` bus value changes while `vld` is 1 and `rdy` is 0. | `2` |
+| Timeout | `vld` stays 1 and `rdy` stays 0 for more than 10 cycles (simulation override). | `3` |
+| Reset Grace | `vld` is 1 immediately after `rst_n` transitions from 0 to 1. | `4` |
+
+In all cases, `protocol_violation_sticky` (`led[4]`) transitions from 0 to 1 and remains latched.
+
+---
+
+## 7. Automated Test Log
+
+The following is the expected simulation output from a passing run:
 
 ```
 ==================================================
-   STARTING PROTOCOL MONITOR IP SELF-TESTBENCH    
+   STARTING PROTOCOL MONITOR IP SELF-TESTBENCH
 ==================================================
 
 --- Running Scenario 0: Normal Handshake Operations ---
-[PASS] 160000 ps - Test Passed: Scenario 0: 5 Normal Handshakes Counted
-[PASS] 160000 ps - Test Passed: Scenario 0: Zero Violations in Normal Handshakes
+[PASS] ... - Test Passed: Scenario 0: 5 Normal Handshakes Counted
+[PASS] ... - Test Passed: Scenario 0: Zero Violations in Normal Handshakes
 
 --- Running Scenario 1: DROP_VALID Violation ---
-[PASS] 210000 ps - Test Passed: Scenario 1: Live Violation Code 1 (DROP_VALID)
-[PASS] 210000 ps - Test Passed: Scenario 1: Sticky Violation Latched
-[PASS] 210000 ps - Test Passed: Scenario 1: Drop Valid Counter Incremented
+[PASS] ... - Test Passed: Scenario 1: Live Violation Code 1 (DROP_VALID)
+[PASS] ... - Test Passed: Scenario 1: Sticky Violation Latched
+[PASS] ... - Test Passed: Scenario 1: Drop Valid Counter Incremented
 
 --- Running Scenario 2: DATA_CHANGE Violation ---
-[PASS] 280000 ps - Test Passed: Scenario 2: Live Violation Code 2 (DATA_CHANGE)
-[PASS] 280000 ps - Test Passed: Scenario 2: Data Change Counter Incremented
+[PASS] ... - Test Passed: Scenario 2: Live Violation Code 2 (DATA_CHANGE)
+[PASS] ... - Test Passed: Scenario 2: Data Change Counter Incremented
 
 --- Running Scenario 3: TIMEOUT Violation ---
-[PASS] 430000 ps - Test Passed: Scenario 3: Timeout Counter Incremented
+[PASS] ... - Test Passed: Scenario 3: Timeout Counter Incremented
 
 --- Running Scenario 4: RESET Grace Violation ---
-[PASS] 520000 ps - Test Passed: Scenario 4: Live Violation Code 4 (RESET_VALID)
-[PASS] 520000 ps - Test Passed: Scenario 4: Reset Violation Counter Incremented
+[PASS] ... - Test Passed: Scenario 4: Live Violation Code 4 (RESET_VALID)
+[PASS] ... - Test Passed: Scenario 4: Reset Violation Counter Incremented
 
 ==================================================
    *** ALL VERIFICATION TESTS PASSED (0 ERRORS) ***
@@ -109,3 +140,5 @@ When inspecting GTKWave or Vivado Hardware Manager ILA captures:
    Reset Violations : 1
 ==================================================
 ```
+
+> **Note:** The final summary counters reflect post-reset values. Scenario 4 asserts active-low reset, which zeroes all counters. Only the Reset Grace violation recorded after reset release is visible in the final report.

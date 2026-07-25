@@ -2,30 +2,29 @@
 
 ## Supported Versions
 
-The following versions of the **Protocol Monitor IP** core are currently supported with security patches and critical bug fixes:
-
 | Version | Supported |
 | :--- | :---: |
-| 1.0.x | :white_check_mark: |
-| < 1.0.0 | :x: |
-
----
+| 1.0.x | ✅ |
+| < 1.0.0 | ❌ |
 
 ## Reporting a Vulnerability
 
-We take the security and stability of our hardware design files seriously. If you discover a security vulnerability or critical RTL flaw that could lead to hardware denial-of-service, buffer overruns in memory-mapped interfaces, or logic locking bugs:
+This is a single-maintainer open-source FPGA project. If you discover a critical RTL flaw, a logic vulnerability that could cause incorrect protocol assertion behavior, or a design issue that could lead to unexpected hardware states:
 
-1. **Do NOT publicly disclose the issue** on open GitHub issues or discussions.
-2. **Email your findings privately** to the maintainers at `security@example.com` (or create a private GitHub Security Advisory).
-3. Include detailed reproduction steps, simulation scripts, and affected files/versions.
+1. **Do not** open a public GitHub issue.
+2. Create a **private GitHub Security Advisory** on this repository. GitHub provides this feature under the **Security** tab → **Advisories** → **New draft security advisory**.
+3. Include:
+   - A description of the vulnerability.
+   - Affected files and versions.
+   - Steps to reproduce (simulation commands, stimulus, expected vs. actual behavior).
+   - Any proposed fix, if available.
 
-### Response Timeline
-- **Initial Acknowledgment**: Within 48 hours.
-- **Vulnerability Assessment**: Within 5 business days.
-- **Patch Release & Disclosure**: Fix released within 30 days of confirmed vulnerability.
+## Response Timeline
 
----
+- **Acknowledgment**: Within 7 days.
+- **Assessment**: Within 14 days.
+- **Fix and disclosure**: Within 30 days of confirmed vulnerability, via a patch release.
 
-## Responsible Disclosure Policy
+## Scope
 
-We follow Responsible Disclosure principles. Once a fix has been verified and released in a patch update (e.g. v1.0.1), a public security advisory will be published detailing the issue and thanking the reporter.
+This policy covers the RTL design files, testbench, constraint files, and build scripts in this repository. It does not cover third-party EDA tools (Vivado, Icarus Verilog) or board-level hardware issues.

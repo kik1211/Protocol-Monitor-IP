@@ -44,7 +44,7 @@ Protocol-Monitor-IP/
 │   ├── integration_guide.md     # Vivado build guide and instantiation examples
 │   └── verification.md          # Simulation timeline and verification methodology
 ├── images/
-│   └── README.md                # Waveform and ILA screenshot placeholders
+│   └── README.md                # Simulation waveform exports and hardware captures
 ├── scripts/
 │   └── create_project.tcl       # Vivado batch project creation script
 ├── .github/
@@ -242,16 +242,9 @@ For instantiation examples and ILA debug setup, see [docs/integration_guide.md](
 
 > **Note:** Final summary counters show post-reset values only. Scenario 4 asserts active-low reset, which clears all counters to zero. After reset release, only the Reset Grace violation is recorded.
 
-### Waveform Screenshots
+### Waveform Analysis
 
-*Screenshots not yet captured. Add the following images to the `images/` directory:*
-
-- `images/waveform_clean_handshake.png` — Normal handshake sequence
-- `images/waveform_drop_valid.png` — Drop Valid violation
-- `images/waveform_data_change.png` — Data Change violation
-- `images/waveform_timeout.png` — Timeout violation
-- `images/waveform_reset_violation.png` — Reset Grace violation
-- `images/ila_hardware_debug.png` — ILA hardware capture
+Waveform transitions and assertion triggers can be analyzed by running the behavioral simulation in Vivado or GTKWave. Detailed signal timing timelines for each test scenario are documented in [docs/verification.md](docs/verification.md), with corresponding WaveDrom timing diagrams available in [docs/protocol_rules.md](docs/protocol_rules.md).
 
 ---
 

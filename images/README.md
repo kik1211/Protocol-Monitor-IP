@@ -1,10 +1,12 @@
 # Simulation Waveforms & Hardware Captures
 
-This directory stores behavioral simulation waveform exports and hardware logic analyzer captures for the Protocol Monitor IP core.
+This directory is designated for behavioral simulation waveform exports and hardware logic analyzer captures for the Protocol Monitor IP core. Currently, no exported waveform or hardware capture image files are committed; this directory contains only this documentation file.
 
-## Waveform Artifacts
+## Planned Waveform Artifacts
 
-| Filename | Source | Description |
+The table below lists the planned artifact filenames and targets for waveform exports and ILA captures generated during simulation or board bring-up:
+
+| Filename (Planned) | Source | Description |
 | :--- | :--- | :--- |
 | `waveform_clean_handshake.png` | GTKWave or Vivado | Valid/Ready handshake sequence under nominal timing (Scenario 0). |
 | `waveform_drop_valid.png` | GTKWave or Vivado | Valid deasserted prematurely before handshake, asserting `violation_code` = 1 (Scenario 1). |

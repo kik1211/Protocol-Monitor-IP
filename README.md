@@ -44,7 +44,7 @@ Protocol-Monitor-IP/
 │   ├── integration_guide.md     # Vivado build guide and instantiation examples
 │   └── verification.md          # Simulation timeline and verification methodology
 ├── images/
-│   └── README.md                # Simulation waveform exports and hardware captures
+│   └── README.md                # Waveform export guide and planned artifact inventory (no images committed)
 ├── scripts/
 │   └── create_project.tcl       # Vivado batch project creation script
 ├── .github/
@@ -244,7 +244,7 @@ For instantiation examples and ILA debug setup, see [docs/integration_guide.md](
 
 ### Waveform Analysis
 
-Waveform transitions and assertion triggers can be analyzed by running the behavioral simulation in Vivado or GTKWave. Detailed signal timing timelines for each test scenario are documented in [docs/verification.md](docs/verification.md), with corresponding WaveDrom timing diagrams available in [docs/protocol_rules.md](docs/protocol_rules.md).
+Waveform transitions and assertion triggers can be analyzed by running the behavioral simulation in Vivado or GTKWave. Detailed signal timing timelines for each test scenario are documented in [docs/verification.md](docs/verification.md), with corresponding WaveDrom timing diagrams available in [docs/protocol_rules.md](docs/protocol_rules.md). Waveform export procedures and planned artifact targets are documented in [images/README.md](images/README.md) (no exported waveform images or hardware captures are currently committed).
 
 ---
 

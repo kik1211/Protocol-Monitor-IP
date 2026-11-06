@@ -1,23 +1,32 @@
-# Waveform & Hardware Screenshot Placeholders
+# Simulation Waveforms & Hardware Captures
 
-This directory stores simulation waveform captures and hardware debug screenshots. The following images are referenced in the project documentation. Replace each placeholder with an actual PNG capture from GTKWave or Vivado.
+This directory is designated for behavioral simulation waveform exports and hardware logic analyzer captures for the Protocol Monitor IP core. Currently, no exported waveform or hardware capture image files are committed; this directory contains only this documentation file.
 
-## Expected Images
+## Planned Waveform Artifacts
 
-| Filename | Source | Description |
+The table below lists the planned artifact filenames and targets for waveform exports and ILA captures generated during simulation or board bring-up:
+
+| Filename (Planned) | Source | Description |
 | :--- | :--- | :--- |
-| `waveform_clean_handshake.png` | GTKWave or Vivado | Normal Valid/Ready handshake sequence (Scenario 0). |
-| `waveform_drop_valid.png` | GTKWave or Vivado | Valid deasserted before handshake, `violation_code` = 1 (Scenario 1). |
-| `waveform_data_change.png` | GTKWave or Vivado | Data payload changed while waiting for Ready, `violation_code` = 2 (Scenario 2). |
-| `waveform_timeout.png` | GTKWave or Vivado | `wait_counter` exceeding `TIMEOUT_LIMIT`, `violation_code` = 3 (Scenario 3). |
-| `waveform_reset_violation.png` | GTKWave or Vivado | Valid asserted during reset grace period, `violation_code` = 4 (Scenario 4). |
-| `ila_hardware_debug.png` | Vivado Hardware Manager | ILA logic analyzer capture from ZedBoard hardware. |
+| `waveform_clean_handshake.png` | GTKWave or Vivado | Valid/Ready handshake sequence under nominal timing (Scenario 0). |
+| `waveform_drop_valid.png` | GTKWave or Vivado | Valid deasserted prematurely before handshake, asserting `violation_code` = 1 (Scenario 1). |
+| `waveform_data_change.png` | GTKWave or Vivado | Data payload changed while waiting for Ready, asserting `violation_code` = 2 (Scenario 2). |
+| `waveform_timeout.png` | GTKWave or Vivado | Handshake wait latency exceeding `TIMEOUT_LIMIT`, asserting `violation_code` = 3 (Scenario 3). |
+| `waveform_reset_violation.png` | GTKWave or Vivado | Valid asserted during reset recovery grace window, asserting `violation_code` = 4 (Scenario 4). |
+| `ila_hardware_debug.png` | Vivado Hardware Manager | On-chip Integrated Logic Analyzer (ILA) trace captured on ZedBoard hardware. |
 
-## Capture Instructions
+## Waveform Export Procedure
 
-1. Run the simulation in Vivado (`Run Simulation → Run Behavioral Simulation`).
-2. In the waveform viewer, add signals: `clk`, `sw`, `led`, `protocol_violation_sticky`, `violation_code`, `total_handshakes`, `total_violations`.
-3. Run the simulation to completion (`$finish`).
-4. Zoom to the relevant time range for each scenario (see [docs/verification.md](../docs/verification.md) for the timeline).
-5. Export each waveform view as a PNG file using `File → Export → Waveform Image`.
-6. Save each file into this `images/` directory with the exact filename listed above.
+1. Launch behavioral simulation in Vivado:
+   ```tcl
+   launch_simulation
+   ```
+2. In the waveform viewer, add the monitored interface signals:
+   - `clk`, `rst_n`, `vld`, `rdy`, `data`
+   - `protocol_violation_sticky`, `violation_code`, `total_handshakes`, `total_violations`
+3. Execute the simulation run:
+   ```tcl
+   run -all
+   ```
+4. Zoom to the corresponding scenario interval (refer to [docs/verification.md](../docs/verification.md)).
+5. Export waveform snapshots via `File → Export → Waveform Image`.

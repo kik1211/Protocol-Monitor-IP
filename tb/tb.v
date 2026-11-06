@@ -56,11 +56,14 @@ module tb;
     end
 
     // Wait Helper Task
+    // Waits for n positive clock edges and delays #1 (1ns) past the edge to allow
+    // non-blocking assignments (NBA) to settle, eliminating active-region sampling races.
     task wait_cycles(input integer n);
         integer i;
         begin
             for (i = 0; i < n; i = i + 1)
                 @(posedge clk);
+            #1;
         end
     endtask
 

@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  rtl-simulation:
+    name: RTL Behavioral Simulation & Verification
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Icarus Verilog
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog
+          iverilog -V
+
+      - name: Compile RTL and Testbench
+        run: |
+          iverilog -g2012 -Wall \
+            -o "$RUNNER_TEMP/protocol_monitor.vvp" \
+            rtl/master.v \
+            rtl/slave.v \
+            rtl/protocol_monitor.v \
+            rtl/top.v \
+            tb/tb.v
+
+      - name: Execute Simulation and Verify Assertions
+        run: |
+          set -euo pipefail
+
+          vvp "$RUNNER_TEMP/protocol_monitor.vvp" | tee "$RUNNER_TEMP/sim.log"
+
+          if grep -Fq "[FAIL]" "$RUNNER_TEMP/sim.log"; then
+            echo "ERROR: Testbench reported failed assertions."
+            exit 1
+          fi
+
+          if ! grep -Fq "ALL VERIFICATION TESTS PASSED (0 ERRORS)" "$RUNNER_TEMP/sim.log"; then
+            echo "ERROR: Expected verification success marker missing."
+            exit 1
+          fi
+
+          echo "RTL SIMULATION AND ASSERTION CHECKS PASSED"

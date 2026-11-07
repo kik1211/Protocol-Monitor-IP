@@ -1,5 +1,7 @@
 # Protocol Monitor IP
 
+[![CI](https://github.com/kik1211/Protocol-Monitor-IP/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kik1211/Protocol-Monitor-IP/actions/workflows/ci.yml)
+
 A parameterized FPGA IP core for real-time monitoring, assertion checking, and performance profiling of streaming Valid/Ready handshake protocols.
 
 Targets the Avnet ZedBoard (`xc7z020clg484-1`) with Xilinx Vivado.
@@ -253,7 +255,7 @@ Waveform transitions and assertion triggers can be analyzed by running the behav
 1. **Timing Optimization** — Replace `WINDOW_SIZE = 1000` with `1024` and use bit-shift (`>> 10`) instead of integer division (`/ 1000`).
 2. **Runtime Error Clear** — Add a `clear_error` input port to deassert `protocol_violation_sticky` without full chip reset.
 3. **AXI4-Lite Register Interface** — Wrap telemetry registers into an AXI4-Lite slave for CPU memory-mapped access.
-4. **CI/CD** — Add a GitHub Actions workflow running Icarus Verilog simulation and automated PASS/FAIL gate.
+4. **CI/CD** — Automated GitHub Actions workflow running Icarus Verilog simulation and assertion checks on `main` (Completed in `.github/workflows/ci.yml`).
 
 ---
 
